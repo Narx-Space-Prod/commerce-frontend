@@ -37,3 +37,15 @@ requires `SESSION_SECRET` (at least 32 characters), `PUBLIC_ORIGIN`, `CATALOGUE_
 Use the integrated preview in `platform-gitops/local/compose.yaml` for all services.
 
 Imported with its license from [boutique-frontend, revision 574e47b](https://github.com/Local-Narx-Space/boutique-frontend/tree/574e47b788fe94357cb424cc37d5429f581f0680).
+
+## Delivery
+
+PRs run shared workflow/secret checks, then component Docker tests, a non-root runtime
+check, a blocking HIGH/CRITICAL vulnerability scan and SBOM generation. Trusted main
+can publish the exact tested image to ECR through OIDC and sign its digest, provenance
+and SBOM. Publishing is held unless `DELIVERY_ENABLED=true`; no AWS resources are
+created by this repository. GitOps verifies release records and promotes the same
+digests through reviewed dev, QA and production PRs.
+
+App credentials, AWS setup and local registry refresh are documented in the single
+[project guide](https://github.com/Narx-Space-Prod/platform-infrastructure/blob/main/DOC.md).
