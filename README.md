@@ -49,3 +49,16 @@ digests through reviewed dev, QA and production PRs.
 
 App credentials, AWS setup and local registry refresh are documented in the single
 [project guide](https://github.com/Narx-Space-Prod/platform-infrastructure/blob/main/DOC.md).
+
+## Test coverage
+
+Run `npm ci --ignore-scripts` and `npm run test:coverage`. The report is
+`coverage/lcov.info`; `coverage/lcov-report/index.html` provides the generated LCOV HTML view.
+The c8 run includes server and browser JavaScript, including files not executed
+by tests. Browser application coverage is currently zero and remains visible.
+The narrowly scoped test-exclude dependency overrides select patched glob and
+minimatch releases until its upstream dependency ranges include those fixes.
+
+CI exports the `analysis` Docker target from the same cached test stage required
+by `runtime`. Sonar imports that report, and publishing waits for its quality
+gate. Coverage tooling and reports are absent from the runtime image.
