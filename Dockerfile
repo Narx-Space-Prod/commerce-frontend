@@ -7,7 +7,10 @@ RUN npm ci --ignore-scripts
 COPY src ./src
 COPY public ./public
 COPY tests ./tests
-RUN npm test
+RUN npm run test:coverage
+
+FROM scratch AS analysis
+COPY --from=test /app/coverage/lcov.info /lcov.info
 
 FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runtime
 # Keep the pinned base while applying Alpine's zlib security update.
