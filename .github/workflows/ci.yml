@@ -1,4 +1,6 @@
-name: CI
+name: 01 - Application CI
+run-name: >-
+  CI | ${{ github.event.pull_request.number && format('PR #{0}', github.event.pull_request.number) || github.sha }}
 
 on:
   pull_request:
@@ -13,44 +15,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  workflows:
-    uses: Narx-Space-Prod/platform-ci/.github/workflows/workflows.yml@666b596743c0fd43a0ba3ed1efb8dc7b89b7593e
-  frontend:
-    needs: workflows
-    uses: Narx-Space-Prod/platform-ci/.github/workflows/build.yml@35ff4ae9d506db00dbc2adc7ec027382bbe99db3
-    with:
-      component: frontend
-  sonar:
-    needs: [frontend]
-    uses: Narx-Space-Prod/platform-ci/.github/workflows/sonar.yml@5c5e186e8b028a62ed002af36595281429505659
-    with:
-      organization: ${{ vars.SONAR_ORGANIZATION }}
-      project-key: ${{ vars.SONAR_PROJECT_KEY }}
-      server-url: ${{ vars.SONAR_SERVER_URL || 'https://sonarcloud.io' }}
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  frontend-publish:
-    needs: [frontend, sonar]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DELIVERY_ENABLED == 'true' && needs.frontend.outputs.changed == 'true'
-    permissions:
-      contents: read
-      id-token: write
-      packages: write
-    uses: Narx-Space-Prod/platform-ci/.github/workflows/service.yml@35ff4ae9d506db00dbc2adc7ec027382bbe99db3
-    with:
-      component: frontend
-      changed: ${{ needs.frontend.outputs.changed == 'true' }}
-  release:
-    needs: [frontend-publish]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DELIVERY_ENABLED == 'true'
+  pipeline:
+    name: Application
     permissions:
       contents: write
       actions: read
-    uses: Narx-Space-Prod/platform-ci/.github/workflows/release.yml@35ff4ae9d506db00dbc2adc7ec027382bbe99db3
+      id-token: write
+      packages: write
+    uses: Narx-Space-Prod/platform-ci/.github/workflows/application.yml@f46a854434b38f1740f16a6c9458cb5d95a4dece
     with:
-      releases: |
-        [
-          {"component":"frontend","image":"${{ needs.frontend-publish.outputs.image }}","digest":"${{ needs.frontend-publish.outputs.digest }}"}
-        ]
+      application: frontend
     secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       NARX_RELEASE_APP_PRIVATE_KEY: ${{ secrets.NARX_RELEASE_APP_PRIVATE_KEY }}
