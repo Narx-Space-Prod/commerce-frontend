@@ -1,6 +1,6 @@
 FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS test
-# Keep the pinned base while applying Alpine's zlib security update.
-RUN apk add --no-cache --upgrade 'zlib>=1.3.2-r1'
+# Keep the pinned base while applying Alpine's musl and zlib security updates.
+RUN apk add --no-cache --upgrade 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3' 'zlib>=1.3.2-r1'
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --ignore-scripts
@@ -13,8 +13,8 @@ FROM scratch AS analysis
 COPY --from=test /app/coverage/lcov.info /lcov.info
 
 FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runtime
-# Keep the pinned base while applying Alpine's zlib security update.
-RUN apk add --no-cache --upgrade 'zlib>=1.3.2-r1'
+# Keep the pinned base while applying Alpine's musl and zlib security updates.
+RUN apk add --no-cache --upgrade 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3' 'zlib>=1.3.2-r1'
 WORKDIR /app
 COPY --from=test --chown=10001:10001 /app/package.json ./
 COPY --from=test --chown=10001:10001 /app/src ./src
