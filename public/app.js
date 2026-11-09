@@ -457,13 +457,13 @@ $("logout").onclick = async () => {
 $("cart-toggle").onclick = () => $("cart-panel").showModal();
 $("close-cart").onclick = () => $("cart-panel").close();
 $("checkout").onclick = () => location.assign("/checkout");
-$("previous-orders").onclick = () => {
+$("previous-orders").onclick = async () => {
   page--;
-  renderOrders();
+  await renderOrders();
 };
-$("next-orders").onclick = () => {
+$("next-orders").onclick = async () => {
   page++;
-  renderOrders();
+  await renderOrders();
 };
 $("checkout-form").onsubmit = async (event) => {
   event.preventDefault();
@@ -754,10 +754,10 @@ async function adminOrders(root) {
       );
       button.type = "submit";
       form.append(reason, button);
-      form.onsubmit = (event) => {
+      form.onsubmit = async (event) => {
         event.preventDefault();
         if (confirm("Request a full test-mode refund for this order?"))
-          adminAction(button, "/admin/orders/" + order.id + "/refund", {
+          await adminAction(button, "/admin/orders/" + order.id + "/refund", {
             reason: reason.value,
           });
       };
@@ -783,9 +783,9 @@ async function adminOrders(root) {
       remote.setAttribute("aria-label", "Razorpay order ID from the test dashboard");
       const button = element("button", "Reconcile payment", "secondary");
       form.append(remote, button);
-      form.onsubmit = (event) => {
+      form.onsubmit = async (event) => {
         event.preventDefault();
-        adminAction(button, "/admin/orders/" + order.id + "/payment/reconcile", {
+        await adminAction(button, "/admin/orders/" + order.id + "/payment/reconcile", {
           providerOrderId: remote.value,
         });
       };
@@ -800,13 +800,13 @@ async function adminOrders(root) {
     next = element("button", "Next", "secondary");
   previous.disabled = adminPage === 0;
   next.disabled = !data.hasMore;
-  previous.onclick = () => {
+  previous.onclick = async () => {
     adminPage--;
-    renderAdmin();
+    await renderAdmin();
   };
-  next.onclick = () => {
+  next.onclick = async () => {
     adminPage++;
-    renderAdmin();
+    await renderAdmin();
   };
   navigation.append(previous, element("span", "Page " + (adminPage + 1)), next);
   root.append(navigation);
@@ -823,9 +823,9 @@ async function adminAction(button, path, body) {
   }
 }
 for (const tab of document.querySelectorAll("[data-admin]"))
-  tab.onclick = () => {
+  tab.onclick = async () => {
     adminSection = tab.dataset.admin;
-    renderAdmin();
+    await renderAdmin();
   };
 $("close-editor").onclick = () => $("product-editor").close();
 $("product-form").onsubmit = async (event) => {
@@ -847,4 +847,4 @@ $("product-form").onsubmit = async (event) => {
     $("save-product").disabled = false;
   }
 };
-start();
+start().catch((error) => message(error.message));

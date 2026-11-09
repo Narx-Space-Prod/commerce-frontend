@@ -8,6 +8,7 @@ const secret = process.env.SESSION_SECRET;
 if (!secret || secret.length < 32) throw Error("SESSION_SECRET must be at least 32 characters");
 const origin = process.env.PUBLIC_ORIGIN || "http://localhost:8080";
 const secure = process.env.COOKIE_SECURE === "true";
+const requestBase = new URL(origin);
 const urls = {
   catalogue: process.env.CATALOGUE_URL || "http://localhost:8081",
   cart: process.env.CART_URL || "http://localhost:8082",
@@ -74,6 +75,7 @@ function accountCookie(token, age = 604800) {
 const server = http.createServer(async (req, res) => {
   const start = Date.now(),
     rid = randomUUID();
+  let requestPath = "unmatched";
   res.setHeader("X-Request-ID", rid);
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "same-origin");
@@ -82,12 +84,7 @@ const server = http.createServer(async (req, res) => {
     "default-src 'self'; script-src 'self' https://checkout.razorpay.com; style-src 'self'; frame-src https://*.razorpay.com https://*.razorpay.in; connect-src 'self' https://*.razorpay.com https://*.razorpay.in; img-src 'self' data: https://*.razorpay.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   );
   res.once("finish", () => {
-    observe(
-      req.method,
-      new URL(req.url, "http://internal").pathname,
-      res.statusCode,
-      (Date.now() - start) / 1000,
-    );
+    observe(req.method, requestPath, res.statusCode, (Date.now() - start) / 1000);
     console.log(
       JSON.stringify({
         method: req.method,
@@ -99,8 +96,9 @@ const server = http.createServer(async (req, res) => {
     );
   });
   try {
-    const url = new URL(req.url, "http://internal"),
+    const url = new URL(req.url, requestBase),
       path = url.pathname;
+    requestPath = path;
     if (path === "/health/live") return reply(res, 200, { status: "ok" });
     if (path === "/health/ready") {
       const results = await Promise.all(Object.values(urls).map((u) => call(u + "/health/ready")));

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 const source = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
 
 function screen(fetch) {
@@ -30,7 +31,9 @@ function screen(fetch) {
     location: { assign: (path) => navigation.push(path) },
     window: {},
   });
-  vm.runInContext(source.replace(/\nstart\(\);\s*$/, "\n"), context);
+  vm.runInContext(source.slice(0, source.lastIndexOf("\nstart()")), context, {
+    filename: fileURLToPath(new URL("../public/app.js", import.meta.url)),
+  });
   vm.runInContext(
     "cart={items:[{productId:'mug',quantity:1}]}; paymentConfig={enabled:true};",
     context,
